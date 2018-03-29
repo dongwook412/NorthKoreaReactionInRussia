@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.httr-oauth
+.DS_Store
+.httr-oauth
+*.udpipe
+*.txt
+*.csv
+*.feather
+*.json
+*.rds
+*.xlsx
