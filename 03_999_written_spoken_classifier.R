@@ -6,14 +6,14 @@ library(magrittr)
 library(caTools)
 # samples <- c("The cat sat on the mat.", "The dog ate my homework.")
 
-written_data <- read_csv('2_DataPreprocess/DeepLearn/data.csv')
-spoken_data <- fromJSON('1_DataCrawl/DataMining/russian_sentiment_train.json')
+spoken_data <- read_csv('Data/SpokenData/dataframe.csv')
+written_data <- fromJSON('Data/WrittenData/russian_sentiment_train.json')
 
 set.seed(1993)
-written_data <- written_data[sample(nrow(written_data), 8000), ]
+spoken_data <- written_data[sample(nrow(written_data), 8000), ]
 
-text_data <- c(written_data$text, spoken_data$text)
-y_data <- c(rep(0, nrow(written_data)), rep(1, nrow(spoken_data)))
+text_data <- c(spoken_data$text, written_data$text)
+y_data <- c(rep(0, nrow(spoken_data)), rep(1, nrow(written_data)))
 
 data <- data.frame(text = text_data, class = y_data, stringsAsFactors = FALSE)
 data <- data[sample(nrow(data)), ]
