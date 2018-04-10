@@ -59,7 +59,7 @@ collet_data_artlist <- function(str_vec) {
 
 # collect data -----------
 month <-
-  generate_dates("2018-01-01", "2018-04-01", time_interval = 'months')
+  generate_dates("2018-02-01", "2018-04-09", time_interval = 'months')
 
 res <- collet_data_artlist(month)
 
