@@ -33,26 +33,34 @@ kaggle_model <- keras_model_sequential()%>%
                   output_dim = 128,
                   input_length = maxlen
   ) %>%
-  layer_flatten() %>% 
-  layer_dense(units = 64, activation = 'tanh') %>%
+  layer_conv_1d(
+    filters = 64,
+    kernel_size = 5,
+    padding = 'valid',
+    activation = 'relu',
+    strides = 1
+  ) %>% 
+  layer_max_pooling_1d(pool_size = 4) %>% 
+  layer_dropout(rate = 0.7) %>% 
+  bidirectional(layer_cudnn_gru(units = 64)) %>% 
   layer_dropout(rate = 0.7) %>% 
   layer_dense(units = 16, activation = 'tanh') %>% 
   layer_dropout(rate = 0.7) %>% 
   layer_dense(units = 4, activation = 'tanh') %>% 
   layer_dropout(rate = 0.7) %>% 
-  layer_dense(units = 1, activation = 'sigmoid')
+  layer_dense(units = 3, activation = 'softmax')
 
 
 kaggle_model %>% compile(
   optimizer = "adam",
-  loss = "binary_crossentropy",
+  loss = "categorical_crossentropy",
   metrics = c("accuracy")
 )
 
 kaggle_history <- kaggle_model %>% fit(
   kaggle_train_x, 
-  (as.numeric(as.factor(kaggle_train$sentiment)) - 1),
-  epochs = 10,
+  to_categorical(as.numeric(as.factor(kaggle_train$sentiment)) - 1),
+  epochs = 100,
   batch_size = 128,
   validation_split = 0.1
 )
@@ -63,6 +71,13 @@ kaggle_test_tokenizer <- text_tokenizer(num_words = max_features) %>%
 
 kaggle_test_sequences <- texts_to_sequences(kaggle_test_tokenizer, kaggle_test$text)
 
-kaggle_test_x <- pad_sequences(kaggle_test_sequences, max_len)
+kaggle_test_x <- pad_sequences(kaggle_test_sequences, maxlen)
 
-mean(ifelse(predict(kaggle_model, kaggle_test_x) > 0.5, 1, 0) == kaggle_test$sentiment)
+pred <- predict(kaggle_model, kaggle_test_x)
+
+# 1 neg 2 neu 3 pos
+
+
+mean(max.col(pred, ties.method = c("random")) == as.numeric(as.factor(kaggle_test$sentiment)))
+
+keras::save_model_hdf5(kaggle_model, 'DeepLearnModel/kaggle_model.hdf5')

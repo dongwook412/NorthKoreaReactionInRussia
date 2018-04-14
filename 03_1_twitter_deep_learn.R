@@ -13,7 +13,7 @@ set.seed(1993)
 
 
 
-twitter_train_ind <- sample.split(twitter_data$tone, SplitRatio = 0.9)
+twitter_train_ind <- sample.split(twitter_data$sentiment, SplitRatio = 0.9)
 
 twitter_train <- twitter_data[twitter_train_ind,]
 twitter_test <- twitter_data[!twitter_train_ind, ]
@@ -36,8 +36,16 @@ twitter_model <- keras_model_sequential()%>%
                   output_dim = 128,
                   input_length = maxlen
   ) %>%
-  layer_flatten() %>% 
-  layer_dense(units = 64, activation = 'tanh') %>%
+  layer_conv_1d(
+    filters = 64,
+    kernel_size = 5,
+    padding = 'valid',
+    activation = 'relu',
+    strides = 1
+  ) %>% 
+  layer_max_pooling_1d(pool_size = 4) %>% 
+  layer_dropout(rate = 0.7) %>% 
+  bidirectional(layer_cudnn_gru(units = 64)) %>% 
   layer_dropout(rate = 0.7) %>% 
   layer_dense(units = 16, activation = 'tanh') %>% 
   layer_dropout(rate = 0.7) %>% 
@@ -54,7 +62,7 @@ twitter_model %>% compile(
 
 twitter_history <- twitter_model %>% fit(
   twitter_train_x, 
-  (as.numeric(as.factor(twitter_train$tone)) - 1),
+  (as.numeric(as.factor(twitter_train$sentiment)) - 1),
   epochs = 10,
   batch_size = 128,
   validation_split = 0.1
@@ -66,6 +74,9 @@ twitter_test_tokenizer <- text_tokenizer(num_words = max_features) %>%
 
 twitter_test_sequences <- texts_to_sequences(twitter_test_tokenizer, twitter_test$text)
 
-twitter_test_x <- pad_sequences(twitter_test_sequences, max_len)
+twitter_test_x <- pad_sequences(twitter_test_sequences, maxlen)
 
-mean(ifelse(predict(twitter_model, twitter_test_x) > 0.5, 1, 0) == twitter_test$tone) # 92%
+mean(ifelse(predict(twitter_model, twitter_test_x) > 0.5, 'positive', 'negative') == twitter_test$sentiment)
+
+
+keras::save_model_hdf5(twitter_model, 'DeepLearnModel/twitter_model.hdf5')
