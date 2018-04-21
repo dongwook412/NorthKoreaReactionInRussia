@@ -25,9 +25,24 @@ expert_100_tokenizer <- text_tokenizer(num_words = max_features) %>%
 expert_100_sequences <- texts_to_sequences(expert_100_tokenizer, expert_100$text)
 expert_100_x <- pad_sequences(expert_100_sequences, maxlen)
 
-predict(em, expert_100_x)
-predict(km, expert_100_x)
-predict(tm, expert_100_x)
+pred <- predict(em, expert_100_x)
+
+expert_100 %>% mutate(for_test = case_when(sentiment == 'l' ~ 1,
+                                            sentiment == 'n' ~ 2,
+                                            sentiment == 'p' ~ 3)) %>% select(for_test) -> for_test
+
+
+mean(max.col(pred, ties.method = c("random")) == for_test$for_test, na.rm = TRUE)
+
+expert_100$`DL(Expert)` <- c(max.col(pred, ties.method = c("random")))
+
+
+max.col(predict(km, expert_100_x)) # 1 neg 2 neu 3 pos
+
+data.frame(pred_num = predict(tm, expert_100_x)) %>% mutate(pred = case_when(pred_num < 1/3 ~ 'negative',
+                                                                         pred_num < 2/3 ~ 'neutral',
+                                                                         TRUE ~ 'positive'))
+
 
 
 

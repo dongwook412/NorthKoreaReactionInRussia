@@ -9,15 +9,17 @@ library(caTools)
 expert_data <- read_csv('Data/Train/Expert/data.csv')
 expert_data %<>% filter(sentiment != "л")
 set.seed(1993)
+table(expert_data$sentiment)
+rbind(
+(expert_data %>% filter(sentiment == "n"))[sample(529, 500), ],
+(expert_data %>% filter(sentiment == "l"))[sample(2917, 1000), ],
+(expert_data %>% filter(sentiment == "p"))[sample(549, 500), ]) -> expert_proc
 
+expert_train_ind <- sample.split(expert_proc$sentiment, SplitRatio = 0.9)
 
-
-
-expert_train_ind <- sample.split(expert_data$sentiment, SplitRatio = 0.9)
-
-expert_train <- expert_data[expert_train_ind,]
-expert_test <- expert_data[!expert_train_ind, ]
-
+expert_train <- expert_proc[expert_train_ind,]
+expert_test <- expert_proc[!expert_train_ind, ]
+# expert_train <- expert_proc
 max_features <- 500
 maxlen <- 200
 
@@ -44,13 +46,13 @@ expert_model <- keras_model_sequential()%>%
     strides = 1
   ) %>% 
   layer_max_pooling_1d(pool_size = 4) %>% 
-  layer_dropout(rate = 0.7) %>% 
+
   bidirectional(layer_cudnn_gru(units = 64)) %>% 
-  layer_dropout(rate = 0.7) %>% 
+
   layer_dense(units = 16, activation = 'tanh') %>% 
-  layer_dropout(rate = 0.7) %>% 
+
   layer_dense(units = 4, activation = 'tanh') %>% 
-  layer_dropout(rate = 0.7) %>% 
+
   layer_dense(units = 3, activation = 'softmax')
 
 
@@ -60,13 +62,17 @@ expert_model %>% compile(
   metrics = c("accuracy")
 )
 
-expert_history <- expert_model %>% fit(
+expert_history <- 
+  
+  
+  expert_model %>% fit(
   expert_train_x, 
   to_categorical(as.numeric(as.factor(expert_train$sentiment)) - 1),
-  epochs = 100,
-  batch_size = 128,
-  validation_split = 0.1
-)
+  epochs = 10000,
+  batch_size = 256,
+  validation_split = 0.5,
+ verbose = TRUE, view_metrics = FALSE
+  )
 
 expert_test_tokenizer <- text_tokenizer(num_words = max_features) %>%
   fit_text_tokenizer(expert_test$text)
@@ -79,4 +85,4 @@ pred <- predict(expert_model, expert_test_x)
 # 1 l 2 n 3 p 
 mean(max.col(pred, ties.method = c("random")) == as.numeric(as.factor(expert_test$sentiment)))
 
-keras::save_model_hdf5(expert_model, 'DeepLearnModel/expert_model.hdf5')
+keras::save_model_hdf5(expert_model, 'DeepLearnModel/expert_model_2.hdf5')
