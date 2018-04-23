@@ -1,40 +1,40 @@
 # 01_1_Sentiment_Dictionary_Spoken_Data
 
 
-library(feather)
-library(dplyr)
-library(jsonlite)
-
-annotate_train <- read_feather('Data/Train/Twitter/annotate_train.feather')
-annotate_dict <- read_feather('Data/SentimentDictionary/annotate_dict.feather')
-
-score <- annotate_dict %>% select(lemma, score)
-annotate_train <- annotate_train %>% left_join(score, by = 'lemma')
-
-predict_score <- annotate_train %>% group_by(doc_id) %>% summarise(score = mean(score, na.rm = TRUE))
-predict_score$doc_id <- as.numeric(predict_score$doc_id)
-
-train <- readr::read_csv('Data/SpokenData/dataframe.csv')
-train$doc_id <- 1:nrow(train)
-colnames(train) <- c('text', 'sentiment', 'doc_id')
-
-predict_score <- predict_score %>% arrange(doc_id)
-train <- train %>% arrange(doc_id)
-train <- train[1:106500, ]
-train$score <- predict_score$score
-
-# readr::write_csv(train, 'data/sentiment_analysis/analysis/setiment_dict.csv')
-
-train %>% group_by(sentiment) %>% summarise(mean(score, na.rm = TRUE))
-
-train <- train %>% filter(!is.nan(score))
-train <- train %>% mutate(predict = case_when(.$score < 0 ~ 'negative',
-                                              TRUE ~ 'positive'))
+# library(feather)
+# library(dplyr)
+# library(jsonlite)
+# library(magrittr)
+# annotate_train <- read_feather('Data/Train/Twitter/annotate_train.feather')
+# 
+# 
+# kaggle_dict <- read_csv('Data/SentimentDictionary/Kaggle/lemma_dict.csv')
+# bing_dict <- read_csv('Data/SentimentDictionary/EngLexicon/rus_bing.csv')
+# afinn_dict <- read_csv('Data/SentimentDictionary/EngLexicon/rus_AFINN.csv')
+# nrc_dict <- read_csv('Data/SentimentDictionary/EngLexicon/rus_nrc.csv')
+# loghran_dict <- read_csv('Data/SentimentDictionary/EngLexicon/rus_loghran.csv')
+# 
+# 
+# kaggle_score <- annotate_train %>% left_join(kaggle_dict, by = "lemma") %>% group_by(doc_id) %>% summarise(kaggle_score = mean(score, na.rm = TRUE))
+# bing_score <- annotate_train %>% left_join(bing_dict, by = "lemma") %>% group_by(doc_id) %>% summarise(bing_score = mean(score, na.rm = TRUE))
+# afinn_score <- annotate_train %>% left_join(afinn_dict, by = "lemma") %>% group_by(doc_id) %>% summarise(afinn_score = mean(score, na.rm = TRUE))
+# nrc_score <- annotate_train %>% left_join(nrc_dict, by = "lemma") %>% group_by(doc_id) %>% summarise(nrc_score = mean(score, na.rm = TRUE))
+# loghran_score <- annotate_train %>% left_join(loghran_dict, by = "lemma") %>% group_by(doc_id) %>% summarise(loghran_score = mean(score, na.rm = TRUE))
+# 
+# write_csv(loghran_score, 'loghran_score.csv')
 
 
-# train <- train %>% filter(sentiment %in% c('negative', 'positive'))
-table(train$sentiment)
-table(train$sentiment, train$predict)
+data <- read_csv('Data/Train/Twitter/sample.csv')
 
-# about 60%
+score <- read_csv('Result/Dictionary/twitter_dict_score.csv')
+data$doc_id <- 1:nrow(data)
+score$total_score <- rowSums(score[, 2:6])
+score <- score[1:13802, ]
 
+
+score %<>% mutate(predict = case_when(total_score > -1 ~ 'positive',
+                                      TRUE ~ 'negative'))
+
+
+
+table(score$predict, data$sentiment)

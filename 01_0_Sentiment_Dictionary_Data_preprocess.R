@@ -12,7 +12,10 @@ library(udpipe)
 
 # Load Model
 
-ud_model_rs <- udpipe_download_model(language = 'russian-syntagrus')
+# ud_model_rs <- udpipe_download_model(language = 'russian-syntagrus')
+# ud_model_rs <- udpipe_load_model(ud_model_rs$file_model)
+
+ud_model_rs <- readRDS('ud_model_rs.RDS')
 ud_model_rs <- udpipe_load_model(ud_model_rs$file_model)
 
 
@@ -23,16 +26,19 @@ ud_model_rs <- udpipe_load_model(ud_model_rs$file_model)
 ### Load data
 
 data <- fromJSON('Data/Train/Kaggle/russian_sentiment_train.json')
+set.seed(1993)
+example <- data[caTools::sample.split(data$sentiment, 0.1),]
+data <- example
 
 ### Annotate data
 
 for (i in 1:ceiling(nrow(data) / 100)) {
-  if (i == 83) {
-    train <- data[8201:8263,]
+  if (i == 9) {
+    train <- data[801:826,]
     train_annotate <-
       udpipe_annotate(ud_model_rs, x = train$text, doc_id = train$id)
     train_annotate <- as_data_frame(train_annotate)
-    write_feather(train_annotate,'temp/train_annotate_8261-8263.feather')
+    write_feather(train_annotate,'temp/train_annotate_801-826.feather')
     cat('finished at {Sys.time()}')
   }
   
@@ -64,15 +70,18 @@ write_feather(annotate_train, 'Data/Train/Kaggle/annotate_train.feather')
 ## Twitter Data -----------
 
 data <- read_csv('Data/Train/Twitter/dataframe.csv')
+set.seed(1993)
+example <- data[caTools::sample.split(data$sentiment, 5/100),]
+data <- example
 data$id <- 1:nrow(data)
 
-for (i in 1700:ceiling(nrow(data) / 100)) {
-  if (i == 2761) {
-    train <- data[2760001:276048,]
+for (i in 1:ceiling(nrow(data) / 100)) {
+  if (i == 139) {
+    train <- data[13801:13802,]
     train_annotate <-
       udpipe_annotate(ud_model_rs, x = train$text, doc_id = train$id)
     train_annotate <- as_data_frame(train_annotate)
-    write_feather(train_annotate,'temp/train_annotate_8261-8263.feather')
+    write_feather(train_annotate,'temp/train_annotate_13801-13802.feather')
     cat('finished at {Sys.time()}')
   }
   
@@ -101,13 +110,20 @@ write_feather(annotate_train, 'Data/Train/Twitter/annotate_train.feather')
 
 data <- read_csv('Data/Train/Expert/data.csv')
 
+
+
+
+data$sentiment %>% table()
+
+
+
 for (i in 1:ceiling(nrow(data) / 100)) {
-  if (i == 70) {
-    train <- data[6901:6999,]
+  if (i == 40) {
+    train <- data[3901:3995,]
     train_annotate <-
       udpipe_annotate(ud_model_rs, x = train$text, doc_id = train$id)
     train_annotate <- as_data_frame(train_annotate)
-    write_feather(train_annotate,'temp/train_annotate_6901-6999.feather')
+    write_feather(train_annotate,'temp/train_annotate_3901-3995.feather')
     cat('finished at {Sys.time()}')
   }
   

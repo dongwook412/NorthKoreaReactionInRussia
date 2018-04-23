@@ -5,39 +5,58 @@ library(dplyr)
 library(jsonlite)
 library(magrittr)
 
-annotate_train <- read_feather('Data/Train/Expert/annotate_train.feather')
-annotate_dict <- read_feather('Data/SentimentDictionary/annotate_dict.feather')
-
-score <- annotate_dict %>% select(lemma, score)
-annotate_train <- annotate_train %>% left_join(score, by = 'lemma')
-
-predict_score <- annotate_train %>% group_by(doc_id) %>% summarise(score = mean(score, na.rm = TRUE))
-predict_score$doc_id <- as.numeric(predict_score$doc_id)
-
-train <- read_csv('Data/Train/Expert/data.csv')
-colnames(train) <- c('text', 'sentiment', 'doc_id')
-
-predict_score <- predict_score %>% arrange(doc_id)
-train <- train %>% arrange(doc_id)
-
-predict_score <- subset(predict_score,subset = c(rep(TRUE, 6999), FALSE))
-
-train$score <- predict_score$score
-
-# readr::write_csv(train, 'data/sentiment_analysis/analysis/setiment_dict.csv')
-
-train %>% group_by(sentiment) %>% summarise(mean(score, na.rm = TRUE))
-
-train %<>% filter(sentiment %in% c('n','p','l'))
-
-train <- train %>% mutate(predict = case_when(.$score < 0 ~ 'n',
-                                              .$score > 1 ~ 'p',
-                                              TRUE ~ 'l'))
 
 
-# train <- train %>% filter(sentiment %in% c('negative', 'positive'))
-table(train$sentiment)
-table(train$sentiment, train$predict)
+data <- read_csv('Data/Train/Expert/data.csv')
+set.seed(1993)
+data <- rbind(data %>% filter(sentiment != "l"), (data %>% filter(sentiment == 'l'))[sample(2917, 550), ])
+colnames(data)[3] <- 'doc_id'
 
-# about 54%
+score <- read_csv('Result/Dictionary/expert_dict_score.csv')
+score$total_score <- rowSums(score[, 2:6])
+
+data <- data %>% left_join(score, by = 'doc_id')
+
+max <- 0
+
+
+
+for(i in seq(-5, 5, 0.5)) {
+  
+  for(j in seq(-5, 5, 0.5)) {
+    cor <- 0
+    score %<>% mutate(predict = case_when(total_score > i ~ 'p',
+                                          total_score > j ~ 'l',
+                                          TRUE ~ 'n'))
+    for(k in 1:3995) {
+      if(score$predict[k] == data$sentiment[k]) {
+        cor <- cor + 1
+        if(score$predict[k] == 'p') {
+          cor <- cor + 2
+        }
+        if(score$predict[k] == 'n') {
+          cor <- cor + 2
+        }
+      } 
+    }
+
+    if (max < cor) {
+      max <- cor
+      obj_i <- i
+      obj_j <- j
+      cat(paste("max : ", max, "\n", obj_i, obj_j, "\n"))
+    }
+    
+  }
+}
+
+
+
+score %<>% mutate(predict = case_when(total_score > 4 ~ 'p',
+                                        total_score > -5 ~ 'l',
+                                        TRUE ~ 'n'))
+
+
+
+table(score$predict, data$sentiment)
 
