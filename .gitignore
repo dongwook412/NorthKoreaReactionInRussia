@@ -7,9 +7,6 @@
 .httr-oauth
 *.udpipe
 *.txt
-*.csv
 *.feather
-*.json
 *.rds
-*.xlsx
 *.Rproj
