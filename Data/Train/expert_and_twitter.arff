@@ -1,7 +1,7 @@
-@relation R_data_frame
+@relation R_data_frame-weka.filters.unsupervised.attribute.StringToNominal-Rlast
 
 @attribute text string
-@attribute sentiment string
+@attribute sentiment {l,n,p}
 
 @data
 '78-летний кита́йский ли́дер Цзян Цзэминь по́дал проше́ние об отста́вке с поста́ председа́теля Центра́льного вое́нного сове́та / ЦВС / КНР на проходя́щем в Пекине пле́нуме ЦК компа́ртии Кита́я.  [Андрей Бычков. Китайский лидер Цзян Цзэминь уходит в отставку (2004) // ИТАР-ТАСС, 2004.09.18] [disambiguated]',l
