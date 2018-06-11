@@ -20,8 +20,8 @@ expert_train_ind <- sample.split(expert_proc$sentiment, SplitRatio = 0.9)
 expert_train <- expert_proc[expert_train_ind,]
 expert_test <- expert_proc[!expert_train_ind, ]
 # expert_train <- expert_proc
-max_features <- 500
-maxlen <- 200
+max_features <- 500 # extract top 500 words
+maxlen <- 200 # 200 words length
 
 expert_train_tokenizer <- text_tokenizer(num_words = max_features) %>%
   fit_text_tokenizer(expert_train$text)
@@ -47,7 +47,7 @@ expert_model <- keras_model_sequential()%>%
   ) %>% 
   layer_max_pooling_1d(pool_size = 4) %>% 
 
-  bidirectional(layer_cudnn_gru(units = 64)) %>% 
+  bidirectional(layer_cudnn_gru(units = 64, )) %>% 
 
   layer_dense(units = 16, activation = 'tanh') %>% 
 

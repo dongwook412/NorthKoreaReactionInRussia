@@ -58,4 +58,4 @@ generate_dates <-
   }
 
 
-generate_dates("2018-01-01", "2018-02-01", time_interval = 'days') -> k
+generate_dates("2018-05-21", "2018-05-31", time_interval = 'days') -> k
