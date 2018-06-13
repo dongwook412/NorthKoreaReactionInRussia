@@ -5,15 +5,32 @@ library(glue)
 library(dplyr)
 library(stringr)
 
-articles <- read_csv('3_DataAnalyze/Press/EVENT/volume/num_of_articles.csv')
-articles_rus <- read_csv('3_DataAnalyze/Press/EVENT/volume/num_of_articles_rus.csv')
-articles_nk <- read_csv('3_DataAnalyze/Press/EVENT/volume/num_of_articles_nk.csv')
+articles <- read_csv('Result/GDELT/EVENT/volume/num_of_articles.csv')
+articles_rus <- read_csv('Result/GDELT/EVENT/volume/num_of_articles_rus_nk.csv')
+articles_nk <- read_csv('Result/GDELT/EVENT/volume/num_of_articles_nk.csv')
 url <- "https://www.nti.org/documents/2137/north_korea_missile_test_database.xlsx"
 destfile <- "north_korea_missile_test_database.xlsx"
 download.file(url, destfile)
 nk_missile <- read_excel(destfile, na = c(NA, "Unknown", "N/A"))
 
+str_kordate <- function(string) {
+  res <- string %>%
+    str_replace(pattern = "년 ", "-") %>% 
+    str_replace(pattern = "월", "") %>% 
+    str_replace(pattern = "일", "")
+  res
+}
 
+colnames(articles) <- c('date', 'record')
+colnames(articles_rus) <- c('date', 'record')
+colnames(articles_nk) <- c('country', 'date', 'record')
+
+articles$date %<>% str_kordate()
+articles_rus$date %<>% str_kordate()
+articles_nk$date %<>% str_kordate()
+
+articles$date <- paste0(articles$date, "-1")
+articles_nk$date <- paste0(articles_nk$date, "-1")
 
 # Ratio
 

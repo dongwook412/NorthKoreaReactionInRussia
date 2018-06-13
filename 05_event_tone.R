@@ -2,16 +2,29 @@ library(readr)
 library(readxl)
 library(dplyr)
 library(lubridate)
+library(stringr)
 library(glue)
 library(ggplot2)
 library(scales)
+library(magrittr)
+library(viridis)
 
 
 # Event Number of Articles ----------
 
 # Read data ----------
 
-avg_tone <- read_csv('3_DataAnalyze/Press/EVENT/tone/avg_tone.csv')
+avg_tone <- read_csv('Result/GDELT/EVENT/tone/avg_tone.csv')
+colnames(avg_tone) <- c("country", "date", "avg_tone")
+str_kordate <- function(string) {
+  res <- string %>%
+    str_replace(pattern = "년 ", "-") %>% 
+    str_replace(pattern = "월 ", "-") %>% 
+    str_replace(pattern = "일", "")
+  res
+}
+avg_tone$date %<>% str_kordate()
+
 
 # Cut off by month ---------
 
@@ -42,7 +55,8 @@ plot_data <- rbind(avg_tone_month, avg_tone_rus_month)
 
 plot_tone <-
   ggplot(plot_data, aes(x = year_month, y = mean_tone, color = country)) +
-  geom_line() +
+  geom_line(size = 1) +
+  scale_colour_viridis(discrete=TRUE, ) +
   theme(plot.subtitle = element_text(vjust = 1),
         plot.caption = element_text(vjust = 1),
         axis.text.x = element_text(angle = 90),
@@ -56,7 +70,7 @@ diff <- avg_tone_rus_month %>%
   mutate(diff = mean_tone.x - mean_tone.y)
 
 plot_tone_diff <- ggplot(diff, aes(x = year_month, y = diff)) +
-  geom_line() +
+  geom_line(size = 1) +
   theme(plot.subtitle = element_text(vjust = 1),
         plot.caption = element_text(vjust = 1),
         axis.text.x = element_text(angle = 90)) +
@@ -64,12 +78,6 @@ plot_tone_diff <- ggplot(diff, aes(x = year_month, y = diff)) +
        x = "Time", y = "Difference") + 
   scale_x_date(labels = scales::date_format("%Y-%m"), date_breaks = '1 months')
 
-
-plot_nk <-
-  ggplot(nk_missile_month, aes(x = year_month, y = record)) +
-  geom_line() +
-  labs(title = "Count of North Korea Missile",
-       x = "Time", y = "Record")
 
 plot_tone
 plot_tone_diff
