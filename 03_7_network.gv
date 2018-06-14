@@ -1,0 +1,34 @@
+graph rnnNetwork {
+  
+  graph [rankdir = LR]
+  
+  node [shape = circle,
+        style = filled,
+        color = grey]
+        
+  node [fillcolor = red
+        label = "Input"]
+  i
+  
+  node[fillcolor = green
+      label = "Embedded"]
+  e
+  
+  node[fillcolor = yellow,
+      label = "RNN"]
+  r1 r2 r3
+  node[fillcolor = yellow,
+  label = "Hidden"]
+  h1 h2 h3 h4 h5 h6 h7 h8
+  node[fillcolor = red,
+  label = "Output"]
+  o
+  edge [color = grey]
+  i -- {e}
+  e -- {r1}
+  {r1} -- {r1 r2}
+  {r2} -- {r2 r3} 
+  r3 -- {r3 h1 h2 h3 h4}
+  {h1 h2 h3 h4} -- {h5 h6 h7 h8}
+  {h5 h6 h7 h8} -- {o}
+}
