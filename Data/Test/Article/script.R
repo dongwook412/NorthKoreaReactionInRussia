@@ -1,11 +1,6 @@
 library(tidyverse)
 library(magrittr)
-library(lubridate)
-library(readxl)
 library(viridis)
-
-# Analyze Articles-------
-
 aif_article <- paste0('aif_article/',list.files('aif_article/'))
 aif_reply<- paste0('aif_reply/',list.files('aif_reply/'))
 echo_article <- paste0('echo_article/',list.files('echo_article/'))
@@ -80,28 +75,3 @@ plot_reply_tone <-
   scale_x_date(labels = scales::date_format("%Y-%m"), date_breaks = '1 months')
 
 plot_reply_tone
-
-# Analyze Tweet--------
-
-twit <- read_excel("Result/res_twit.xlsx")
-
-twit$date %<>% as.Date()
-
-twit %<>% mutate(sentiment = case_when(predict == 0 ~ 1,
-                                     predict == 1 ~ -1,
-                                     predict == 2 ~ 0))
-
-res_twit <- twit %>% group_by(date) %>% summarise(sentiment = mean(sentiment))
-
-glimpse(res_twit)
-
-plot_twit_tone <-
-  ggplot(res_twit, aes(x = date, y = sentiment)) +
-  geom_line(size = 1) +
-  theme(plot.subtitle = element_text(vjust = 1),
-        plot.caption = element_text(vjust = 1),
-        axis.text.x = element_text(angle = 90)) +
-  labs(title = "Average Tone Twitter", x = "Time", y = "Tone") +
-  scale_x_date(labels = scales::date_format("%Y-%m-%d"), date_breaks = '1 weeks')
-
-plot_twit_tone
